@@ -25,18 +25,19 @@ int prevR = redVal;
 int prevG = grnVal;
 int prevB = bluVal;
 
-int wait = 10; // 10ms internal crossFade delay; increase for slower fades
+// 10ms internal crossFade delay; increase for slower fades
+int wait = 10;
 
 // Define zone coordinates in IR sensor output
 int zone0 = 256;  // Human is closest to the IR sensor
-int zone1 = 512;  //Human is one quarter to half way to the max distance from the IR sensor
+int zone1 = 512;  // Human is one quarter to half way to the max distance from the IR sensor
 int zone2 = 768;  // Human is half way to three quarters the max distance from the IR sensor
 int zone3 = 1024; // Human is the max distance away from the IR sensor before not being seen
 
 // Time keeping for battery savings
 int movementTimer = 0; // Time tracking iterator for movement sensed by IR.
 int lastMovement = 0;  // Tracking of IR distance over time.
-int wait = 10;         // Amount of time im milliseconds to delay between each analog write to the LEDs.
+int wait = 10;         // Amount of time in milliseconds to delay between each analog write to the LEDs.
 int timerEnd = 180000; // Amount of time in milliseconds before LEDs shut off (180000 = 3 minutes).
 
 // Turns all LEDs off
