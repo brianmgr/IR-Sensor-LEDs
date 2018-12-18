@@ -29,9 +29,9 @@ int zone1 = 380;  // Human is half way to three quarters the max distance from t
 int zone0 = 300; // Human is the max distance away from the IR sensor before not being seen
 
 int wait = 1;      // 10ms internal crossFade delay; increase for slower fades
-int hold = 0;       // Optional hold when a color is complete, before the next crossFade
-int DEBUG = 0;      // DEBUG counter; if set to 1, will write values back via serial
-int loopCount = 100; // How often should DEBUG report?
+int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
+int loopCount = 200; // How often should DEBUG report?
+int distance = 0;
 
 // Initialize color variables
 int prevR = redVal;
@@ -43,20 +43,35 @@ void setup()
 {
   pinMode(redPin, OUTPUT);   // sets the pins as output
   pinMode(grnPin, OUTPUT);   
-  pinMode(bluPin, OUTPUT); 
+  pinMode(bluPin, OUTPUT);
 
   if (DEBUG) {           // If we want to see values for debugging...
     Serial.begin(9600);  // ...set up the serial ouput 
   }
 }
 
-// Main program: list the order of crossfades
+// Take multiple sensor readings and average them out to reduce false readings
+int irRead() {
+  int averaging = 0;             //  Holds value to average readings
+
+  // Get a sampling of 5 readings from sensor
+  for (int i=0; i<5; i++) {
+    distance = analogRead(irSensor);
+    averaging = averaging + distance;
+    delay(55);      // Wait 55 ms between each read
+                    // According to datasheet time between each read
+                    //  is -38ms +/- 10ms. Waiting 55 ms assures each
+                    //  read is from a different sample
+  }
+  distance = averaging / 5;      // Average out readings
+  return(distance);              // Return value
+}
+
 void loop()
 {
-  delay (10);
-  
+
   // Check IR sensor distance to human
-  int distance = analogRead(irSensor);
+  int distance = irRead();
 
   if (DEBUG) {
     Serial.println(distance);
@@ -145,5 +160,4 @@ void crossFade(int color[3]) {
   prevR = redVal; 
   prevG = grnVal; 
   prevB = bluVal;
-  delay(hold); // Pause for optional 'wait' milliseconds before resuming the loop
 }
