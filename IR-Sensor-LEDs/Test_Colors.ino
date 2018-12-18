@@ -9,7 +9,7 @@ int rustBrown[3] = {0, 114, 225};
 int naranja[3] = {40, 74, 225};
 int kindaPurple[3] = {35, 115, 0};
 int lightBlue[3] = {95, 20, 0};
-int black[3] = {0,0,0};
+int black[3] = {255, 255, 255};
 
 void lightUp(int color[3])
 { 
