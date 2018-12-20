@@ -11,8 +11,8 @@ int irSensor = A0;
 //int irSensor = A1;
 
 // Color arrays
-int rustBrown[3] = {72, 25, 5};
-int naranja[3] = {100, 50, 0};
+int rustBrown[3] = {72, 5, 0};
+int naranja[3] = {100, 60, 0};
 int kindaPurple[3] = {96, 10, 100};
 int lightBlue[3] = {0, 30, 100};
 int black[3]  = { 0, 0, 0 };
@@ -23,12 +23,12 @@ int grnVal = black[1];
 int bluVal = black[2];
 
 // Define zone coordinates in IR sensor output
-int zone3 = 480;  // Human is closest to the IR sensor
-int zone2 = 400;  // Human is one quarter to half way to the max distance from the IR sensor
-int zone1 = 380;  // Human is half way to three quarters the max distance from the IR sensor
-int zone0 = 300; // Human is the max distance away from the IR sensor before not being seen
+int zone1 = 472;  // Human is closest to the IR sensor
+int zone2 = 402;  // Human is one quarter to half way to the max distance from the IR sensor
+int zone3 = 359;  // Human is half way to three quarters the max distance from the IR sensor
+int zone4 = 320; // Human is the max distance away from the IR sensor before not being seen
 
-int wait = 1;      // 10ms internal crossFade delay; increase for slower fades
+int wait = 1.8;      // 10ms internal crossFade delay; increase for slower fades
 int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
 int loopCount = 200; // How often should DEBUG report?
 int distance = 0;
@@ -58,7 +58,7 @@ int irRead() {
   for (int i=0; i<5; i++) {
     distance = analogRead(irSensor);
     averaging = averaging + distance;
-    delay(55);      // Wait 55 ms between each read
+    delay(5);      // Wait 55 ms between each read
                     // According to datasheet time between each read
                     //  is -38ms +/- 10ms. Waiting 55 ms assures each
                     //  read is from a different sample
@@ -71,23 +71,23 @@ void loop()
 {
 
   // Check IR sensor distance to human
-  int distance = irRead();
+  //int distance = irRead();
+  distance = analogRead(irSensor);
 
   if (DEBUG) {
     Serial.println(distance);
   }
   
-  // If sensor is working, read its value, tie to a zone, cross fade to its respective color.
-  if (distance <= zone0){
+  if (distance >= zone1){
     crossFade(rustBrown);
   }
-  else if (distance > zone0 && distance <= zone1){
+  else if (distance < zone1 && distance > zone2){
     crossFade(naranja);
   }
-  else if (distance > zone1 && distance <= zone2){
+  else if (distance < zone2 && distance > zone3){
     crossFade(kindaPurple);
   }
-  else if (distance > zone2){
+  else if (distance < zone3){
     crossFade(lightBlue);
   }
 
@@ -142,19 +142,19 @@ void crossFade(int color[3]) {
 
     delay(wait); // Pause for 'wait' milliseconds before resuming the loop
 
-    if (DEBUG) { // If we want serial output, print it at the 
-      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
-        Serial.print("Loop/RGB: #");
-        Serial.print(i);
-        Serial.print(" | ");
-        Serial.print(redVal);
-        Serial.print(" / ");
-        Serial.print(grnVal);
-        Serial.print(" / ");  
-        Serial.println(bluVal); 
-      } 
-      DEBUG += 1;
-    }
+//    if (DEBUG) { // If we want serial output, print it at the 
+//      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
+//        Serial.print("Loop/RGB: #");
+//        Serial.print(i);
+//        Serial.print(" | ");
+//        Serial.print(redVal);
+//        Serial.print(" / ");
+//        Serial.print(grnVal);
+//        Serial.print(" / ");  
+//        Serial.println(bluVal); 
+//      } 
+//      DEBUG += 1;
+//    }
   }
   // Update current values for next loop
   prevR = redVal; 
