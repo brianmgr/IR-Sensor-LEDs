@@ -12,7 +12,7 @@ int irSensor = A0;
 
 // Color arrays
 int rustBrown[3] = {72, 5, 0};
-int naranja[3] = {100, 60, 0};
+int pink[3] = {100, 10, 45};
 int kindaPurple[3] = {96, 10, 100};
 int lightBlue[3] = {0, 30, 100};
 int black[3]  = { 0, 0, 0 };
@@ -23,9 +23,9 @@ int grnVal = black[1];
 int bluVal = black[2];
 
 // Define zone coordinates in IR sensor output
-int zone1 = 472;  // Human is closest to the IR sensor
-int zone2 = 402;  // Human is one quarter to half way to the max distance from the IR sensor
-int zone3 = 359;  // Human is half way to three quarters the max distance from the IR sensor
+int zone1 = 470;  // Human is closest to the IR sensor
+int zone2 = 400;  // Human is one quarter to half way to the max distance from the IR sensor
+int zone3 = 360;  // Human is half way to three quarters the max distance from the IR sensor
 int zone4 = 320; // Human is the max distance away from the IR sensor before not being seen
 
 int wait = 1.8;      // 10ms internal crossFade delay; increase for slower fades
@@ -80,9 +80,10 @@ void loop()
   
   if (distance >= zone1){
     crossFade(rustBrown);
+    delay(8000);
   }
   else if (distance < zone1 && distance > zone2){
-    crossFade(naranja);
+    crossFade(pink);
   }
   else if (distance < zone2 && distance > zone3){
     crossFade(kindaPurple);
