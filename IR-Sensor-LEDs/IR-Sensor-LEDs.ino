@@ -52,7 +52,7 @@ void lowPower()
   crossFade(lightBlue);
 
   //check every 15 seconds to see if zone has changed again
-  while((lowPowerCount < 40) && (lowPowerMode == 1))
+  while((lowPowerCount < 80) && (lowPowerMode == 1))
   {
     delay(lowPowerWait);
     
