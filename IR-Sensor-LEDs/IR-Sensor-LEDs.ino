@@ -132,7 +132,7 @@ void loop()
   // Crossfade to color of zone
   if (currentZone == 1){
     crossFade(rustBrown);
-    delay(0);
+    delay(8000);
   }
   else if (currentZone == 2){
     crossFade(pink);
