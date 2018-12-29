@@ -1,14 +1,8 @@
-// Mega2560 Output
-int redPin = 2;   // Red LED,   connected to digital pin 9
-int grnPin = 3;  // Green LED, connected to digital pin 10
-int bluPin = 4;  // Blue LED,  connected to digital pin 11
-int irSensor = A0;
-
-//// ATTiny85 Output
-//int redLed = 1;
-//int greenLed = 3;
-//int blueLed = 4;
-//int irSensor = A1;
+// ATTiny85 Output
+int redPin = 1;
+int grnPin = 3;
+int bluPin = 4;
+int irSensor = A1;
 
 // Color arrays
 int rustBrown[3] = {72, 5, 0};
@@ -28,10 +22,81 @@ int zone2 = 400;  // Human is one quarter to half way to the max distance from t
 int zone3 = 360;  // Human is half way to three quarters the max distance from the IR sensor
 int zone4 = 320; // Human is the max distance away from the IR sensor before not being seen
 
-int wait = 1.8;      // 10ms internal crossFade delay; increase for slower fades
-int DEBUG = 1;      // DEBUG counter; if set to 1, will write values back via serial
-int loopCount = 200; // How often should DEBUG report?
+// 1.8ms crossFade delay
+int wait = 1.8;
 int distance = 0;
+
+// Power saver stuff
+int inZoneCount = 0;
+int currentZone = 0;
+int lastZone = 0;
+
+// Low Power mode stuff
+int lowPowerWait = 15000;
+int lowPowerCount = 0;
+int lowPowerStartZone = 0; // Zone that low Power Mode started in
+int lowPowerMode = 0;
+
+// Sleep stuff
+int sleepWait = 600000;
+int sleepMode = 0;
+
+
+void lowPower()
+{
+  // Set lowPowerStartZone
+  lowPowerStartZone = currentZone;
+  lowPowerMode = 1;
+  
+  // Stay in zone 4 color
+  crossFade(lightBlue);
+
+  //check every 15 seconds to see if zone has changed again
+  while((lowPowerCount < 40) && (lowPowerMode == 1))
+  {
+    delay(lowPowerWait);
+    
+    lowPowerCount += 1;
+
+    getZone();
+
+    //break out of loop if different zone is seen
+    if (currentZone != lowPowerStartZone)
+    {
+      lowPowerMode = 0;
+      lowPowerCount = 0;
+    }
+
+   // Turn off lowPowerMode and go into sleep mode if 80 cycles have passed and no different zone was seen
+   if ((lowPowerCount >= 80) && (lowPowerMode == 1))
+   {
+      lowPowerMode = 0;
+      lowPowerCount = 0;
+      sleep();
+   } 
+  } 
+}
+
+void sleep()
+{
+
+  sleepMode = 1;
+
+  // Turn off LEDs
+  crossFade(black);
+  
+  // Check distance every 10 minutes
+  while (sleepMode == 1)
+  {
+    delay(sleepWait);
+    getZone();
+    if (currentZone != lowPowerStartZone)
+    {
+      sleepMode = 0;
+      lowPowerCount = 0;
+    } 
+  }  
+}
 
 // Initialize color variables
 int prevR = redVal;
@@ -44,55 +109,68 @@ void setup()
   pinMode(redPin, OUTPUT);   // sets the pins as output
   pinMode(grnPin, OUTPUT);   
   pinMode(bluPin, OUTPUT);
-
-  if (DEBUG) {           // If we want to see values for debugging...
-    Serial.begin(9600);  // ...set up the serial ouput 
-  }
-}
-
-// Take multiple sensor readings and average them out to reduce false readings
-int irRead() {
-  int averaging = 0;             //  Holds value to average readings
-
-  // Get a sampling of 5 readings from sensor
-  for (int i=0; i<5; i++) {
-    distance = analogRead(irSensor);
-    averaging = averaging + distance;
-    delay(5);      // Wait 55 ms between each read
-                    // According to datasheet time between each read
-                    //  is -38ms +/- 10ms. Waiting 55 ms assures each
-                    //  read is from a different sample
-  }
-  distance = averaging / 5;      // Average out readings
-  return(distance);              // Return value
 }
 
 void loop()
 {
 
-  // Check IR sensor distance to human
-  //int distance = irRead();
-  distance = analogRead(irSensor);
+  // Zone History
+  lastZone = currentZone;
 
-  if (DEBUG) {
-    Serial.println(distance);
+  // Check IR sensor distance to human
+  getZone();
+
+  // Zone Counter
+  if (lastZone == currentZone)
+  {
+    inZoneCount ++;
+  } else if (lastZone != currentZone)
+  {
+    inZoneCount = 0;
   }
-  
-  if (distance >= zone1){
+
+  // Crossfade to color of zone
+  if (currentZone == 1){
     crossFade(rustBrown);
-    delay(8000);
+    delay(0);
   }
-  else if (distance < zone1 && distance > zone2){
+  else if (currentZone == 2){
     crossFade(pink);
   }
-  else if (distance < zone2 && distance > zone3){
+  else if (currentZone == 3){
     crossFade(kindaPurple);
   }
-  else if (distance < zone3){
+  else if (currentZone == 4){
     crossFade(lightBlue);
   }
 
+  // Go to low power mode if ~10 minutes has passed in the same zone
+  if (inZoneCount >= 10)
+  {
+    inZoneCount = 0;
+    lowPower();
+  }
 }
+
+void getZone()
+{
+  // Check IR sensor distance to human
+  distance = analogRead(irSensor);
+
+  if (distance >= zone1){
+    currentZone = 1;
+  }
+  else if (distance < zone1 && distance > zone2){
+    currentZone = 2;  
+  }
+  else if (distance < zone2 && distance > zone3){
+    currentZone = 3;
+  }
+  else if (distance < zone3){
+    currentZone = 4;
+  }
+}
+
 
 int calculateStep(int prevValue, int endValue) {
   int step = endValue - prevValue; // What's the overall gap?
@@ -142,20 +220,6 @@ void crossFade(int color[3]) {
     analogWrite(bluPin, (255 - bluVal)); 
 
     delay(wait); // Pause for 'wait' milliseconds before resuming the loop
-
-//    if (DEBUG) { // If we want serial output, print it at the 
-//      if (i == 0 or i % loopCount == 0) { // beginning, and every loopCount times
-//        Serial.print("Loop/RGB: #");
-//        Serial.print(i);
-//        Serial.print(" | ");
-//        Serial.print(redVal);
-//        Serial.print(" / ");
-//        Serial.print(grnVal);
-//        Serial.print(" / ");  
-//        Serial.println(bluVal); 
-//      } 
-//      DEBUG += 1;
-//    }
   }
   // Update current values for next loop
   prevR = redVal; 
